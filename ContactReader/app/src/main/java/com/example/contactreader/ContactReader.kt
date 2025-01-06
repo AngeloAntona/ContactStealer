@@ -7,10 +7,11 @@ import android.provider.ContactsContract
 object ContactReader {
 
     /**
-     * Legge un solo contatto e lo restituisce in formato "Nome:Numero".
+     * Legge tutti i contatti della rubrica in formato "Nome:Numero".
      */
     @SuppressLint("Range")
-    fun readSingleContact(context: Context): String {
+    fun readAllContacts(context: Context): List<String> {
+        val contacts = mutableListOf<String>()
         val cursor = context.contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
             null,
@@ -19,12 +20,12 @@ object ContactReader {
             null
         )
         cursor?.use {
-            if (it.moveToNext()) {
+            while (it.moveToNext()) {
                 val name = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)) ?: "Unknown"
                 val number = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)) ?: "NoNumber"
-                return "$name:$number"
+                contacts.add("$name:$number")
             }
         }
-        return "NoContact:0"
+        return contacts
     }
 }

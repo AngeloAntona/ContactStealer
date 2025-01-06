@@ -11,10 +11,9 @@ import kotlinx.coroutines.*
 
 class BFSKReceiver(
     private val context: Context,
-    private val onBitReceived: (Char) -> Unit,    // callback su bit BFSK "grezzo"
-    private val onContactReceived: (String) -> Unit // callback contatto decodificato
+    private val onBitReceived: (Char) -> Unit,
+    private val onContactReceived: (String) -> Unit
 ) {
-    // Frequenze
     private val freq0 = 20000
     private val freq1 = 20500
     private val sampleRate = 44100
@@ -25,31 +24,35 @@ class BFSKReceiver(
     var isListening = false
         private set
 
-    // Decoder BFSK
     private val decoder = BFSKDecoder(freq0, freq1, sampleRate, bitDurationMs) { rawBit ->
-        onBitReceived(rawBit) // bit BFSK "grezzo"
-        // majority voting (3 bit -> 1 bit)
+        onBitReceived(rawBit)
         onSingleBitDecoded(rawBit)
     }
 
     private val tripleBuffer = StringBuilder()
     private var tripleCount = 0
 
-    // Buffer parser finale
     private val bitAccum = StringBuilder()
     private var parseState = 0
     private var totalLength = -1
     private var tempContact = ""
 
     fun startListening() {
-        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
-                PackageManager.PERMISSION_GRANTED
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
         if (!granted) return
         if (isListening) return
         isListening = true
 
+        // Inizializziamo SheetsHelper:
+        // (assicurati di aver copiato il file credentials in assets e impostato il nome giusto)
+        SheetsHelper.init(context)
+
         val minBufSize = AudioRecord.getMinBufferSize(
-            sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
+            sampleRate,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT
         )
         audioRecord = AudioRecord(
             MediaRecorder.AudioSource.MIC,
@@ -79,9 +82,6 @@ class BFSKReceiver(
         audioRecord = null
     }
 
-    /**
-     * Accumula i bit BFSK in triple, fa majority voting, e poi parseBit(...) su singolo bit
-     */
     private fun onSingleBitDecoded(rawBit: Char) {
         tripleBuffer.append(rawBit)
         tripleCount++
@@ -98,10 +98,6 @@ class BFSKReceiver(
         return if (zeros >= 2) '0' else '1'
     }
 
-    /**
-     * parseBit: ricostruisce la frame BFSK
-     * preambolo (10101010), length(16 bit), payload, suffisso (11110000).
-     */
     private fun parseBit(bit: Char) {
         bitAccum.append(bit)
 
@@ -140,6 +136,8 @@ class BFSKReceiver(
                         parseState = 0
                         // contatto completato
                         onContactReceived(tempContact)
+                        // Salviamo su Google Sheets
+                        SheetsHelper.appendRowToSheet(tempContact)
                         tempContact = ""
                     } else {
                         bitAccum.deleteCharAt(0)

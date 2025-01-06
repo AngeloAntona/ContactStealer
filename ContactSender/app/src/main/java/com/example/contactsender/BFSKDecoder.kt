@@ -11,7 +11,6 @@ class BFSKDecoder(
     private val sampleBuffer = mutableListOf<Short>()
     private val bitBuffer = StringBuilder()
 
-    // Filtri band-pass con q=5.0
     private val filter0 = BandPassFilter(sampleRate.toDouble(), freq0.toDouble(), 5.0)
     private val filter1 = BandPassFilter(sampleRate.toDouble(), freq1.toDouble(), 5.0)
 

@@ -41,19 +41,16 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3" // o la versione coerente con Compose
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
 
 dependencies {
-    // La libreria SoniTalk (modulo :sonitalk-sdk)
-
-    // Altre dipendenze del tuo app module
+    // Dipendenze Compose e AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Compose BOM e dipendenze Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)

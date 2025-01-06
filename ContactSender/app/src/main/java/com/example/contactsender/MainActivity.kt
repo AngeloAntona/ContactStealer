@@ -32,7 +32,12 @@ class MainActivity : ComponentActivity() {
                 bitIndicator = bit.toString()
             },
             onContactReceived = { contact ->
-                info = "Contatto ricevuto:\n$contact"
+                // Quando riceviamo un contatto:
+                // 1) Mostriamo un messaggio a schermo
+                // 2) Inseriamo il contatto su Google Sheets
+                SheetsHelper.appendRowToSheet(contact)
+
+                info = "Contatto ricevuto e inviato a Google Sheets:\n$contact"
                 contactsCount++
             }
         )
@@ -46,6 +51,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        // 1) Inizializziamo SheetsHelper (carica le credenziali e prepara l'API)
+        SheetsHelper.init(this)
+
+        // Registriamo il launcher per richiedere il permesso del microfono
         permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
@@ -70,6 +79,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Verifica se il permesso RECORD_AUDIO è concesso;
+     * altrimenti lo richiede. Poi avvia l'ascolto BFSK.
+     */
     private fun checkAndStart() {
         val granted = ContextCompat.checkSelfPermission(
             this, Manifest.permission.RECORD_AUDIO
@@ -81,6 +94,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Avvia l'ascolto BFSK
+     */
     private fun startListening() {
         info = "In ascolto BFSK..."
         bitIndicator = "_"
@@ -88,11 +104,17 @@ class MainActivity : ComponentActivity() {
         bfskReceiver.startListening()
     }
 
+    /**
+     * Ferma l'ascolto BFSK
+     */
     private fun stopListening() {
         bfskReceiver.stopListening()
         info = "Ascolto interrotto, contatti ricevuti: $contactsCount"
     }
 
+    /**
+     * UI Composable
+     */
     @Composable
     fun MainScreen(
         modifier: Modifier = Modifier,

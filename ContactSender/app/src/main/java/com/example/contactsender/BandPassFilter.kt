@@ -41,6 +41,7 @@ class BandPassFilter(
 
     fun processSample(input: Double): Double {
         val out = a0 * input + a1 * in1 + a2 * in2 - b1 * out1 - b2 * out2
+
         in2 = in1
         in1 = input
         out2 = out1

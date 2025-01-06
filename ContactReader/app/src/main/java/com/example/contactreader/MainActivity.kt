@@ -20,21 +20,25 @@ import androidx.core.content.ContextCompat
 import com.example.contactreader.com.example.contactreader.BFSKTransmitter
 import com.example.contactreader.com.example.contactreader.ContactReader
 import com.example.contactreader.ui.theme.ContactReaderTheme
+import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
     private var info by mutableStateOf("")
+    private var isTransmitting by mutableStateOf(false)
+    private var transmittingJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Inizializza il permission launcher
         permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
             if (granted) {
-                sendContact()
+                startSendingContacts()
             } else {
                 info = "Permesso contatti negato."
             }
@@ -46,7 +50,9 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         modifier = Modifier.padding(pad),
                         info = info,
-                        onClickSend = { checkPermissionAndSend() }
+                        isTransmitting = isTransmitting,
+                        onClickStart = { checkPermissionAndSend() },
+                        onClickStop = { stopSendingContacts() }
                     )
                 }
             }
@@ -60,32 +66,68 @@ class MainActivity : ComponentActivity() {
         if (!granted) {
             permissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
         } else {
-            sendContact()
+            startSendingContacts()
         }
     }
 
-    private fun sendContact() {
-        info = "Leggo contatto..."
-        val contact = ContactReader.readSingleContact(this)
-        info = "Trasmetto: $contact"
-        BFSKTransmitter.transmitSingleContact(contact)
+    private fun startSendingContacts() {
+        info = "Inizio trasmissione contatti..."
+        isTransmitting = true
+        val contacts = ContactReader.readAllContacts(this)
+
+        // Avviamo un job in background per trasmettere i contatti uno alla volta
+        transmittingJob = CoroutineScope(Dispatchers.Default).launch {
+            try {
+                for (contact in contacts) {
+                    if (!isTransmitting) break
+                    withContext(Dispatchers.Main) {
+                        info = "Trasmetto: $contact"
+                    }
+
+                    // Attende la trasmissione del contatto
+                    BFSKTransmitter.transmitSingleContact(contact)
+
+                    // Pausa tra un contatto e l'altro
+                    delay(1000)
+                }
+                withContext(Dispatchers.Main) {
+                    info = "Tutti i contatti trasmessi."
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    info = "Errore durante la trasmissione: ${e.message}"
+                }
+            }
+        }
+    }
+
+    private fun stopSendingContacts() {
+        isTransmitting = false
+        transmittingJob?.cancel()
+        info = "Trasmissione interrotta."
     }
 
     @Composable
     fun MainScreen(
         modifier: Modifier = Modifier,
         info: String,
-        onClickSend: () -> Unit
+        isTransmitting: Boolean,
+        onClickStart: () -> Unit,
+        onClickStop: () -> Unit
     ) {
         Box(
             modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Button(onClick = onClickSend) {
-                    Text(text = "Invia UN Contatto")
+                Button(onClick = onClickStart, enabled = !isTransmitting) {
+                    Text("Avvia Trasmissione")
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onClickStop, enabled = isTransmitting) {
+                    Text("Ferma Trasmissione")
+                }
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(text = info)
             }
         }
@@ -97,7 +139,9 @@ class MainActivity : ComponentActivity() {
         ContactReaderTheme {
             MainScreen(
                 info = "Anteprima",
-                onClickSend = {}
+                isTransmitting = false,
+                onClickStart = {},
+                onClickStop = {}
             )
         }
     }
