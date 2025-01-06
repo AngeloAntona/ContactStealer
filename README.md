@@ -1,129 +1,131 @@
-# **1. Struttura Generale del Progetto**
+# **1. General Structure of the Project**
 
-## **Scopo Principale**
+## **Main Purpose**
 
-Il progetto consiste nello sviluppare due applicazioni distinte in grado di *esfiltrare* i contatti della rubrica da un telefono. L’obiettivo è dimostrare un canale di comunicazione “covert” (nascosto) che non insospettisca troppo l’utente, distribuendo i permessi sensibili tra le due app:
+The project consists of developing two distinct applications capable of *exfiltrating* the phone’s contact list. The objective is to demonstrate a “covert” (hidden) communication channel that does not raise suspicion, by distributing sensitive permissions across the two apps:
 
-- **App1 (Trasmettitore)**: richiede il permesso di lettura dei contatti e invia la rubrica attraverso segnali BFSK a ultrasuoni.
-- **App2 (Ricevitore)**: richiede il permesso di utilizzo del microfono e, una volta decodificati i segnali, invia i contatti estratti su Google Sheets (o altra destinazione).
+- **App1 (Transmitter)**: requests permission to read the contact list and sends it via ultrasonic BFSK signals.
+- **App2 (Receiver)**: requests microphone usage permission and, once the signals are decoded, sends the extracted contacts to Google Sheets (or another destination).
 
-In tal modo, non esiste un’unica app che abbia sia l’accesso ai contatti sia la possibilità di inviarli su Internet: l’esfiltrazione è realizzata tramite un canale audio ultrasonico, e la seconda app ha solo il permesso del microfono (e di conseguenza può inviare i dati in rete senza apparire “sospetta” in termini di permessi contatti).
+This ensures no single app has both access to the contact list and the ability to send data over the internet: the exfiltration is achieved through an ultrasonic audio channel, and the second app only requests microphone permissions (thereby appearing less suspicious in terms of contact access).
 
----
-
-# **2. Descrizione dei Protocolli e delle Precauzioni di Comunicazione**
-
-## **2.1 Protocollo BFSK (Binary Frequency-Shift Keying)**
-
-- **BFSK** è una modulazione che utilizza due frequenze diverse per rappresentare rispettivamente il bit `0` e il bit `1`.
-- Nel codice, le frequenze prescelte sono `freq0 = 20000 Hz` e `freq1 = 20500 Hz`, entrambe nella fascia ultrasonica, non udibili dalla gran parte degli esseri umani.
-- Per ogni bit, il trasmettitore genera un breve tono sinusoidale di durata prestabilita (ad es. 100 ms), modulato sulla frequenza corrispondente.
-
-## **2.2 Ridondanza e Voto di Maggioranza**
-
-- Ogni bit viene ripetuto 3 volte (tecnica di **repetitions**), così da ridurre errori di decodifica dovuti a disturbi ambientali.
-- Sul lato ricevitore, si usa un buffer triplo con **voto di maggioranza** (*majority voting*) per ricostruire il bit originale.
-
-## **2.3 Precauzioni per Migliorare la Trasmissione**
-
-- **Fade In / Out**: In trasmissione, ogni tono include un *fade-in* e *fade-out* (5 ms) per ridurre i “click” e i transienti bruschi.
-- **Pausa fra i contatti**: Tra la trasmissione di un contatto e il successivo si introduce una pausa (delay 1000 ms) per evitare sovrapposizioni e disturbi.
-- **Filtri BandPass**: Nel ricevitore, si applicano filtri passa-banda centrati sulle due frequenze per migliorare l’estrazione del segnale BFSK e ridurre il rumore.
+![HiLevelScheme](ReadmeFiles/SchemaGenerale.png)
 
 ---
 
-# **3. Descrizione di App1 (Trasmettitore)**
+# **2. Communication Protocols and Precautions**
 
-## **3.1 Struttura Generale**
+## **2.1 BFSK Protocol (Binary Frequency-Shift Keying)**
+
+- **BFSK** is a modulation technique that uses two distinct frequencies to represent the binary values `0` and `1`.
+- In the implementation, the selected frequencies are `freq0 = 20000 Hz` and `freq1 = 20500 Hz`, both in the ultrasonic range and inaudible to most humans.
+- For each bit, the transmitter generates a short sinusoidal tone of a fixed duration (e.g., 100 ms), modulated at the corresponding frequency.
+
+## **2.2 Redundancy and Majority Voting**
+
+- Each bit is repeated 3 times (**repetitions**) to reduce decoding errors caused by environmental noise.
+- On the receiver side, a triple buffer with **majority voting** reconstructs the original bit.
+
+## **2.3 Transmission Improvement Precautions**
+
+- **Fade In / Out**: During transmission, each tone includes a *fade-in* and *fade-out* (5 ms) to reduce audio “clicks” and sharp transients.
+- **Contact Transmission Pauses**: A delay of 1000 ms is introduced between contact transmissions to avoid overlap and disturbances.
+- **BandPass Filters**: On the receiver side, band-pass filters centered around the two frequencies enhance BFSK signal extraction and reduce noise.
+
+---
+
+# **3. Description of App1 (Transmitter)**
+
+## **3.1 General Structure**
 
 - **Package**: `com.example.contactreader`
-- **Permessi**: Richiede la *READ_CONTACTS* per accedere ai contatti del dispositivo.
-- **Funzionalità Principale**: Legge tutti i contatti della rubrica, quindi li trasmette uno dopo l’altro in formato BFSK (ultrasuoni).
+- **Permissions**: Requests *READ_CONTACTS* to access the device’s contact list.
+- **Primary Functionality**: Reads all the contacts from the phonebook and transmits them one by one using BFSK (ultrasonic) signals.
 
-## **3.2 Classi Principali**
+## **3.2 Main Classes**
 
 1. **MainActivity**
-   - Gestisce la UI con Jetpack Compose:
-     - Un pulsante `Avvia Trasmissione` (`onClickStart`) inizia il processo di invio.
-     - Un pulsante `Ferma Trasmissione` (`onClickStop`) interrompe la trasmissione.
-   - Richiede il permesso *READ_CONTACTS* se non è stato già concesso.
-   - Esegue un job in coroutine (`Dispatchers.Default`) per trasmettere i contatti in loop, uno alla volta.
-   - Mostra lo stato (`info`) su schermo.
+   - Manages the UI using Jetpack Compose:
+     - A `Start Transmission` button (`onClickStart`) begins the contact transmission process.
+     - A `Stop Transmission` button (`onClickStop`) halts the transmission.
+   - Requests the *READ_CONTACTS* permission if it hasn’t been granted yet.
+   - Runs a coroutine job (`Dispatchers.Default`) to loop through and transmit contacts one by one.
+   - Displays the status (`info`) on the screen.
 
 2. **ContactReader (Singleton object)**
-   - Classe di supporto che legge la rubrica tramite le API di Android (`ContactsContract`).
-   - Ritorna una lista di stringhe in formato `"Nome:Numero"`.
+   - Helper class that reads the contact list using Android’s `ContactsContract` API.
+   - Returns a list of strings in the format `"Name:Number"`.
 
 3. **BFSKTransmitter (Singleton object)**
-   - Contiene la logica di trasmissione BFSK:
-     - Frequenze usate: 20 kHz (bit `0`), 20.5 kHz (bit `1`).
-     - Ripetizione dei bit (3 volte) e *fade in/out* di 5 ms.
-   - **Funzioni principali**:
-     - `transmitSingleContact(contact: String)`: crea la frame BFSK (preambolo + lunghezza + payload + suffisso), ripete i bit, quindi genera i toni e li invia usando un `AudioTrack`.
-     - `buildFrame(...)`: converte una stringa in bit, aggiunge preambolo e suffisso BFSK.
-     - `playBitString(...)`: per ogni bit scrive i dati su `AudioTrack`.
-     - `generateToneWithFade(...)`: genera l’array di `Short` per un singolo tono con *fadeIn/fadeOut* per ridurre i click audio.
+   - Contains the logic for BFSK transmission:
+     - Frequencies used: 20 kHz (bit `0`), 20.5 kHz (bit `1`).
+     - Bit repetition (3 times) and *fade in/out* of 5 ms.
+   - **Main Functions**:
+     - `transmitSingleContact(contact: String)`: Creates the BFSK frame (preamble + length + payload + suffix), repeats bits, generates tones, and transmits them using an `AudioTrack`.
+     - `buildFrame(...)`: Converts a string into bits and adds BFSK preamble and suffix.
+     - `playBitString(...)`: Writes data for each bit to an `AudioTrack`.
+     - `generateToneWithFade(...)`: Generates a `Short` array for a single tone with *fadeIn/fadeOut* to reduce audio clicks.
 
-## **3.3 Tecnologie Usate in App1**
+## **3.3 Technologies Used in App1**
 
-- **Kotlin + Coroutines** per gestire la trasmissione in background.
-- **Jetpack Compose** per l’interfaccia utente (pulsanti, testo informativo).
-- **API Android Contacts** per leggere la rubrica.
-- **AudioTrack** (API Android) per l’uscita audio BFSK.
+- **Kotlin + Coroutines** for managing background transmissions.
+- **Jetpack Compose** for the user interface (buttons, status display).
+- **Android Contacts API** to read the contact list.
+- **AudioTrack** (Android API) for BFSK audio output.
 
 ---
 
-# **4. Descrizione di App2 (Ricevitore)**
+# **4. Description of App2 (Receiver)**
 
-## **4.1 Struttura Generale**
+## **4.1 General Structure**
 
 - **Package**: `com.example.contactsender`
-- **Permessi**: Richiede la *RECORD_AUDIO* per poter ascoltare i suoni tramite il microfono.
-- **Funzionalità Principale**: Riceve i segnali BFSK, decodifica i contatti e li invia a un file di Google Sheets utilizzando credenziali OAuth (service account).
+- **Permissions**: Requests *RECORD_AUDIO* to listen to sounds using the microphone.
+- **Primary Functionality**: Receives BFSK signals, decodes the contacts, and sends them to Google Sheets using OAuth credentials (service account).
 
-## **4.2 Classi Principali**
+## **4.2 Main Classes**
 
 1. **MainActivity**
-   - UI con Jetpack Compose:
-     - Un pulsante `Start Listening` (`onStartListening`) che avvia la ricezione BFSK.
-     - Un pulsante `Stop Listening` (`onStopListening`) che ferma la registrazione.
-   - Inizializza `SheetsHelper` all’avvio per preparare le credenziali e la connessione al foglio Google.
-   - Mostra i contatti decodificati e l’eventuale stato di ricezione in un testo (`info`).
+   - UI built with Jetpack Compose:
+     - A `Start Listening` button (`onStartListening`) initiates BFSK reception.
+     - A `Stop Listening` button (`onStopListening`) stops the recording.
+   - Initializes `SheetsHelper` at startup to load credentials and prepare the connection to Google Sheets.
+   - Displays decoded contacts and reception status in a text view (`info`).
 
 2. **BFSKReceiver**
-   - Si occupa di gestire un `AudioRecord` per ascoltare i segnali BFSK dal microfono.
-   - Usa un `BFSKDecoder` per decodificare i bit e applica la logica di *majority voting* (3 bit -> 1 bit).
-   - Riconosce la frame BFSK (preambolo `10101010`, lunghezza, payload, suffisso `11110000`), ricostruisce la stringa `Nome:Numero`.
-   - Chiama `onContactReceived(...)` quando ha estratto un contatto completo.
+   - Manages an `AudioRecord` to listen for BFSK signals via the microphone.
+   - Uses a `BFSKDecoder` to decode bits and applies **majority voting** logic (3 bits -> 1 bit).
+   - Recognizes the BFSK frame (preamble `10101010`, length, payload, suffix `11110000`) and reconstructs the `Name:Number` string.
+   - Calls `onContactReceived(...)` upon successfully decoding a complete contact.
 
 3. **BFSKDecoder**
-   - Filtra l’audio in streaming con due band-pass (`BandPassFilter`) centrati sulle frequenze BFSK.
-   - Calcola l’energia in ciascun canale e decide se sia `0` o `1` per ogni bit.
-   - Ritorna una stringa di bit, che poi viene gestita dal ricevitore per estrarre i contatti.
+   - Filters incoming audio with two band-pass filters (`BandPassFilter`) centered on the BFSK frequencies.
+   - Calculates energy in each channel to determine if the bit is `0` or `1`.
+   - Returns a bit string, which is processed by the receiver to extract contacts.
 
 4. **BandPassFilter**
-   - Classe che implementa un filtro passa-banda (biquad semplificato) per isolare la frequenza 20 kHz e 20,5 kHz, aumentando l’SNR e migliorando la qualità della decodifica.
+   - Implements a band-pass filter (simplified biquad) to isolate 20 kHz and 20.5 kHz frequencies, enhancing SNR and decoding quality.
 
 5. **SheetsHelper**
-   - Si occupa di autenticare e inviare i dati su Google Sheets:
-     - Carica da `assets/credentials.json` le credenziali di un account di servizio.
-     - Inizializza l’oggetto `Sheets` (Google API) per scrivere i dati.
-     - Con `appendRowToSheet(contact: String)`, inserisce una riga (Nome, Numero, Timestamp) nel foglio `"Foglio1"` (colonne A, B, C).
+   - Handles authentication and data writing to Google Sheets:
+     - Loads service account credentials from `assets/credentials.json`.
+     - Initializes the `Sheets` object (Google API) for data writing.
+     - With `appendRowToSheet(contact: String)`, appends a row (Name, Number, Timestamp) to the sheet `"Foglio1"` (columns A, B, C).
 
-## **4.3 Tecnologie Usate in App2**
+## **4.3 Technologies Used in App2**
 
-- **Kotlin + Coroutines** per gestire in background la registrazione audio e l’invio a Sheets.
-- **AudioRecord** (API Android) per catturare i segnali BFSK dal microfono.
-- **Google Sheets API** per salvare i contatti nel foglio.
-- **Jetpack Compose** per i componenti dell’interfaccia utente.
+- **Kotlin + Coroutines** for managing audio recording and Google Sheets operations in the background.
+- **AudioRecord** (Android API) for capturing BFSK signals through the microphone.
+- **Google Sheets API** for saving contacts to the sheet.
+- **Jetpack Compose** for building the user interface.
 
 ---
 
-# **Conclusioni**
+# **Conclusions**
 
-Attraverso queste due app, i contatti vengono esfiltrati dal telefono in maniera discreta:
+These two apps enable discrete contact exfiltration:
 
-1. **App1** ha il permesso di leggere la rubrica ma non chiede permessi di rete; trasmette i contatti via *ultrasuoni* BFSK.
-2. **App2** cattura i suoni via microfono (unico permesso richiesto) e invia i dati verso Google Sheets.
+1. **App1** has permission to read the contact list but does not request network access; it transmits contacts via *ultrasonic* BFSK signals.
+2. **App2** captures the sound via the microphone (its only required permission) and sends the decoded data to Google Sheets.
 
-Così, l’utente non vede mai un’unica app che abbia sia il permesso di leggere i contatti sia di utilizzare la rete, riducendo il sospetto. Le tecniche BFSK e i filtri band-pass assicurano la decodifica accurata, mentre un meccanismo di ripetizione dei bit e *majority voting* gestisce errori e rumori ambientali.
+This separation ensures no single app has both contact access and network permissions, reducing user suspicion. BFSK techniques and band-pass filtering ensure accurate decoding, while bit repetition and majority voting mitigate noise and environmental errors.
