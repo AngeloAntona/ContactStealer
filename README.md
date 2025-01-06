@@ -2,14 +2,14 @@
 
 ## **Main Purpose**
 
+![HiLevelScheme](ReadmeFiles/SchemaGenerale.png)
+
 The project consists of developing two distinct applications capable of *exfiltrating* the phone’s contact list. The objective is to demonstrate a “covert” (hidden) communication channel that does not raise suspicion, by distributing sensitive permissions across the two apps:
 
 - **App1 (Transmitter)**: requests permission to read the contact list and sends it via ultrasonic BFSK signals.
 - **App2 (Receiver)**: requests microphone usage permission and, once the signals are decoded, sends the extracted contacts to Google Sheets (or another destination).
 
 This ensures no single app has both access to the contact list and the ability to send data over the internet: the exfiltration is achieved through an ultrasonic audio channel, and the second app only requests microphone permissions (thereby appearing less suspicious in terms of contact access).
-
-![HiLevelScheme](ReadmeFiles/SchemaGenerale.png)
 
 ---
 
