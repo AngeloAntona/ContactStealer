@@ -4,22 +4,17 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * Biquad passband filter semplificato
- */
 class BandPassFilter(
     sampleRate: Double,
     freqCenter: Double,
     qFactor: Double
 ) {
-    // Coefficienti
     private var a0 = 0.0
     private var a1 = 0.0
     private var a2 = 0.0
     private var b1 = 0.0
     private var b2 = 0.0
 
-    // Memoria
     private var in1 = 0.0
     private var in2 = 0.0
     private var out1 = 0.0
@@ -37,7 +32,6 @@ class BandPassFilter(
         val a1_ = -2.0 * cosw
         val a2_ = 1.0 - alpha
 
-        // Normalizza
         a0 = b0 / a0_
         a1 = b1_ / a0_
         a2 = b2_ / a0_

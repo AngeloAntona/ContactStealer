@@ -1,9 +1,5 @@
 package com.example.contactsender
 
-/**
- * BFSKDecoder con 2 filtri band-pass (freq0 e freq1).
- * In decodeSamples(...), accumuliamo i campioni per un intero bit e calcoliamo l'energia.
- */
 class BFSKDecoder(
     freq0: Int,
     freq1: Int,
@@ -15,9 +11,9 @@ class BFSKDecoder(
     private val sampleBuffer = mutableListOf<Short>()
     private val bitBuffer = StringBuilder()
 
-    // Filtri band-pass
-    private val filter0 = BandPassFilter(sampleRate.toDouble(), freq0.toDouble(), qFactor = 5.0)
-    private val filter1 = BandPassFilter(sampleRate.toDouble(), freq1.toDouble(), qFactor = 5.0)
+    // Filtri band-pass con q=5.0
+    private val filter0 = BandPassFilter(sampleRate.toDouble(), freq0.toDouble(), 5.0)
+    private val filter1 = BandPassFilter(sampleRate.toDouble(), freq1.toDouble(), 5.0)
 
     fun decodeSamples(buffer: ShortArray, size: Int): String? {
         for (i in 0 until size) {
@@ -30,7 +26,6 @@ class BFSKDecoder(
             val block = sampleBuffer.subList(0, samplesPerBit).toShortArray()
             sampleBuffer.subList(0, samplesPerBit).clear()
 
-            // Azzeriamo gli stati dei filtri per evitare "contaminazioni" tra bit
             resetFilters()
 
             var energy0 = 0.0
@@ -56,9 +51,6 @@ class BFSKDecoder(
     }
 
     private fun resetFilters() {
-        // Reiniziializziamo i filtri ricreandoli?
-        // Oppure potresti azzerare i buffer in1,in2,out1,out2.
-        // Qui preferiamo ricreare i filtri.
         filter0::class.java.getDeclaredField("in1").apply { isAccessible = true; setDouble(filter0, 0.0) }
         filter0::class.java.getDeclaredField("in2").apply { isAccessible = true; setDouble(filter0, 0.0) }
         filter0::class.java.getDeclaredField("out1").apply { isAccessible = true; setDouble(filter0, 0.0) }

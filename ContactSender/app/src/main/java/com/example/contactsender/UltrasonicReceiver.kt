@@ -15,8 +15,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class UltrasonicReceiver(
     private val context: Context
 ) {
-    private val freq0 = 18000
-    private val freq1 = 18500
+    private val freq0 = 20000
+    private val freq1 = 20500
     private val sampleRate = 44100
 
     private val bufferSize = AudioRecord.getMinBufferSize(
@@ -31,9 +31,8 @@ class UltrasonicReceiver(
     var isListening = false
         private set
 
-    // Callback finale
+    // Callbacks
     var onAllContactsReceived: ((String) -> Unit)? = null
-    // Callback parziale
     var onChunkReceived: ((chunkIndex: Int, totalChunks: Int) -> Unit)? = null
 
     private val receivedChunks = mutableMapOf<Int, String>()
@@ -59,13 +58,11 @@ class UltrasonicReceiver(
 
         listenJob = CoroutineScope(Dispatchers.Default).launch {
             val buffer = ShortArray(bufferSize)
-            // BFSKDecoder con filtri bandpass
             val decoder = BFSKDecoder(
                 freq0, freq1, sampleRate,
                 bitDurationMs = 100
-            ) { bit: Char ->
-                // Se vuoi debug in tempo reale:
-                // println("Bit: $bit")
+            ) { bit ->
+                // println("bit: $bit")
             }
 
             while (isActive && isListening) {
@@ -86,15 +83,6 @@ class UltrasonicReceiver(
         audioRecord = null
     }
 
-    /**
-     * Parse del frame BFSK:
-     *  - preambolo 10101010 (8 bit)
-     *  - chunkIndex (16 bit)
-     *  - totalChunks (16 bit)
-     *  - length (16 bit)
-     *  - payload
-     *  - suffisso 11110000 (8 bit)
-     */
     private fun parseFrames(bitStream: String) {
         var currentIndex = 0
         while (true) {
@@ -121,15 +109,14 @@ class UltrasonicReceiver(
             pos += 16
             val payloadLen = bitStringToInt(lengthBits)
 
-            // payload
             val payloadBitsSize = payloadLen * 8
             if (bitStream.length < pos + payloadBitsSize) break
             val payloadBits = bitStream.substring(pos, pos + payloadBitsSize)
             pos += payloadBitsSize
+
             val payloadBytes = bitsToByteArray(payloadBits)
             val payloadString = payloadBytes.toString(Charsets.US_ASCII)
 
-            // suffisso
             if (bitStream.length < pos + 8) break
             val suffix = bitStream.substring(pos, pos + 8)
             pos += 8
@@ -138,7 +125,6 @@ class UltrasonicReceiver(
                 continue
             }
 
-            // Trovato frame
             receivedChunks[cIndex] = payloadString
             onChunkReceived?.invoke(cIndex, totalChunks)
 
@@ -146,7 +132,6 @@ class UltrasonicReceiver(
                 val all = receivedChunks.toSortedMap().values.joinToString(";")
                 onAllContactsReceived?.invoke(all)
             }
-
             currentIndex = pos
         }
     }
@@ -163,7 +148,7 @@ class UltrasonicReceiver(
         val count = bits.length / 8
         val arr = ByteArray(count)
         for (i in 0 until count) {
-            val byteStr = bits.substring(i*8, i*8+8)
+            val byteStr = bits.substring(i * 8, i * 8 + 8)
             arr[i] = byteStr.toInt(2).toByte()
         }
         return arr

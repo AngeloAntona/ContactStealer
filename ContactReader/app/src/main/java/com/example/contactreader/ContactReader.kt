@@ -7,7 +7,7 @@ import android.provider.ContactsContract
 object ContactReader {
 
     /**
-     * Legge un solo contatto dalla rubrica e lo restituisce in formato "Nome:Numero".
+     * Legge un solo contatto e lo restituisce in formato "Nome:Numero".
      */
     @SuppressLint("Range")
     fun readSingleContact(context: Context): String {

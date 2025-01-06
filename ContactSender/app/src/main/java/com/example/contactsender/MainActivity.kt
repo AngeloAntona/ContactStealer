@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
 
-    // BFSKReceiver: passiamo callback che aggiorna bitIndicator e contatti
+    // BFSKReceiver con ridondanza 3x
     private val bfskReceiver by lazy {
         BFSKReceiver(
             context = this,
@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
                 bitIndicator = bit.toString()
             },
             onContactReceived = { contact ->
-                // quando arriva un contatto valido
                 info = "Contatto ricevuto:\n$contact"
                 contactsCount++
             }
