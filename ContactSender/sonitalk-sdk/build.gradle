@@ -1,0 +1,43 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'at.ac.fhstp.sonitalk'
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 2
+        versionName "0.9.1"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+    // ... eventuali custom task, javadoc etc ...
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    // Librerie support (se in uso, potrebbe variare se stai usando AndroidX)
+    // Qui vedi le dipendenze citate nel README di SoniTalk
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+
+    // Altre dipendenze di SoniTalk
+    implementation 'uk.me.berndporr:iirj:1.1'
+    implementation 'de.dfki.mary:marytts-signalproc:5.1.2'
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'edu.emory.mathcs.util:emory-util-io:2.1'
+    implementation 'edu.emory.mathcs.util:emory-util-concurrent:2.1'
+    implementation 'edu.emory.mathcs:JTransforms:2.4'
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
