@@ -1,4 +1,4 @@
-# **1. General Structure of the Project**
+# **General Structure of the Project**
 
 ## **Main Purpose**
 
@@ -13,7 +13,7 @@ This ensures no single app has both access to the contact list and the ability t
 
 ---
 
-# **2. Communication Protocols and Precautions**
+# **Communication Protocols and Precautions**
 
 ## **2.1 BFSK Protocol (Binary Frequency-Shift Keying)**
 
@@ -34,7 +34,7 @@ This ensures no single app has both access to the contact list and the ability t
 
 ---
 
-# **3. Description of App1 (Transmitter)**
+# **Description of App1 (Transmitter)**
 
 ## **3.1 General Structure**
 
@@ -70,7 +70,7 @@ This ensures no single app has both access to the contact list and the ability t
 
 ---
 
-# **4. Description of App2 (Receiver)**
+# **Description of App2 (Receiver)**
 
 ## **4.1 General Structure**
 
@@ -108,14 +108,3 @@ This ensures no single app has both access to the contact list and the ability t
      - Loads service account credentials from `assets/credentials.json`.
      - Initializes the `Sheets` object (Google API) for data writing.
      - With `appendRowToSheet(contact: String)`, appends a row (Name, Number, Timestamp) to the sheet `"Foglio1"` (columns A, B, C).
-
----
-
-# **Conclusions**
-
-These two apps enable discrete contact exfiltration:
-
-1. **App1** has permission to read the contact list but does not request network access; it transmits contacts via *ultrasonic* BFSK signals.
-2. **App2** captures the sound via the microphone (its only required permission) and sends the decoded data to Google Sheets.
-
-This separation ensures no single app has both contact access and network permissions, reducing user suspicion. BFSK techniques and band-pass filtering ensure accurate decoding, while bit repetition and majority voting mitigate noise and environmental errors.
