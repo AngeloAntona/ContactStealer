@@ -15,18 +15,18 @@ This ensures no single app has both access to the contact list and the ability t
 
 # **Communication Protocols and Precautions**
 
-## **2.1 BFSK Protocol (Binary Frequency-Shift Keying)**
+## **BFSK Protocol (Binary Frequency-Shift Keying)**
 
 - **BFSK** is a modulation technique that uses two distinct frequencies to represent the binary values `0` and `1`.
 - In the implementation, the selected frequencies are `freq0 = 20000 Hz` and `freq1 = 20500 Hz`, both in the ultrasonic range and inaudible to most humans.
 - For each bit, the transmitter generates a short sinusoidal tone of a fixed duration (e.g., 100 ms), modulated at the corresponding frequency.
 
-## **2.2 Redundancy and Majority Voting**
+## **Redundancy and Majority Voting**
 
 - Each bit is repeated 3 times (**repetitions**) to reduce decoding errors caused by environmental noise.
 - On the receiver side, a triple buffer with **majority voting** reconstructs the original bit.
 
-## **2.3 Transmission Improvement Precautions**
+## **Transmission Improvement Precautions**
 
 - **Fade In / Out**: During transmission, each tone includes a *fade-in* and *fade-out* (5 ms) to reduce audio “clicks” and sharp transients.
 - **Contact Transmission Pauses**: A delay of 1000 ms is introduced between contact transmissions to avoid overlap and disturbances.
@@ -36,13 +36,13 @@ This ensures no single app has both access to the contact list and the ability t
 
 # **Description of App1 (Transmitter)**
 
-## **3.1 General Structure**
+## **General Structure**
 
 - **Package**: `com.example.contactreader`
 - **Permissions**: Requests *READ_CONTACTS* to access the device’s contact list.
 - **Primary Functionality**: Reads all the contacts from the phonebook and transmits them one by one using BFSK (ultrasonic) signals.
 
-## **3.2 Main Classes**
+## **Main Classes**
 
 ![App1](ReadmeFiles/SchemaApp1.png)
 
@@ -72,13 +72,13 @@ This ensures no single app has both access to the contact list and the ability t
 
 # **Description of App2 (Receiver)**
 
-## **4.1 General Structure**
+## **General Structure**
 
 - **Package**: `com.example.contactsender`
 - **Permissions**: Requests *RECORD_AUDIO* to listen to sounds using the microphone.
 - **Primary Functionality**: Receives BFSK signals, decodes the contacts, and sends them to Google Sheets using OAuth credentials (service account).
 
-## **4.2 Main Classes**
+## **Main Classes**
 
 ![App2](ReadmeFiles/SchemaApp2.png)
 
