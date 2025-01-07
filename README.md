@@ -108,3 +108,9 @@ This ensures no single app has both access to the contact list and the ability t
      - Loads service account credentials from `assets/credentials.json`.
      - Initializes the `Sheets` object (Google API) for data writing.
      - With `appendRowToSheet(contact: String)`, appends a row (Name, Number, Timestamp) to the sheet `"Foglio1"` (columns A, B, C).
+
+
+# **Contact**
+
+- **Email**: [angeloantona.contact@gmail.com](mailto:angeloantona.contact@gmail.com)
+- **LinkedIn**: [Angelo Antona](https://www.linkedin.com/in/angeloantona/)
