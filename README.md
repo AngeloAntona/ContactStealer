@@ -109,6 +109,8 @@ This ensures no single app has both access to the contact list and the ability t
      - Initializes the `Sheets` object (Google API) for data writing.
      - With `appendRowToSheet(contact: String)`, appends a row (Name, Number, Timestamp) to the sheet `"Foglio1"` (columns A, B, C).
 
+---
+
 
 # **Contact**
 
