@@ -68,13 +68,6 @@ This ensures no single app has both access to the contact list and the ability t
      - `playBitString(...)`: Writes data for each bit to an `AudioTrack`.
      - `generateToneWithFade(...)`: Generates a `Short` array for a single tone with *fadeIn/fadeOut* to reduce audio clicks.
 
-## **3.3 Technologies Used in App1**
-
-- **Kotlin + Coroutines** for managing background transmissions.
-- **Jetpack Compose** for the user interface (buttons, status display).
-- **Android Contacts API** to read the contact list.
-- **AudioTrack** (Android API) for BFSK audio output.
-
 ---
 
 # **4. Description of App2 (Receiver)**
@@ -115,13 +108,6 @@ This ensures no single app has both access to the contact list and the ability t
      - Loads service account credentials from `assets/credentials.json`.
      - Initializes the `Sheets` object (Google API) for data writing.
      - With `appendRowToSheet(contact: String)`, appends a row (Name, Number, Timestamp) to the sheet `"Foglio1"` (columns A, B, C).
-
-## **4.3 Technologies Used in App2**
-
-- **Kotlin + Coroutines** for managing audio recording and Google Sheets operations in the background.
-- **AudioRecord** (Android API) for capturing BFSK signals through the microphone.
-- **Google Sheets API** for saving contacts to the sheet.
-- **Jetpack Compose** for building the user interface.
 
 ---
 
