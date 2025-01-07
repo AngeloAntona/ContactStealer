@@ -44,6 +44,8 @@ This ensures no single app has both access to the contact list and the ability t
 
 ## **3.2 Main Classes**
 
+![App1](ReadmeFiles/SchemaApp1.png)
+
 1. **MainActivity**
    - Manages the UI using Jetpack Compose:
      - A `Start Transmission` button (`onClickStart`) begins the contact transmission process.
@@ -84,6 +86,8 @@ This ensures no single app has both access to the contact list and the ability t
 - **Primary Functionality**: Receives BFSK signals, decodes the contacts, and sends them to Google Sheets using OAuth credentials (service account).
 
 ## **4.2 Main Classes**
+
+![App2](ReadmeFiles/SchemaApp2.png)
 
 1. **MainActivity**
    - UI built with Jetpack Compose:
