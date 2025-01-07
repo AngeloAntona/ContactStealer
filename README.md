@@ -1,4 +1,4 @@
-# **General Structure of the Project**
+# **Contact Stealer**
 
 ## **Main Purpose**
 
