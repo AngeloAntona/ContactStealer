@@ -114,5 +114,5 @@ This ensures no single app has both access to the contact list and the ability t
 
 # **Contact**
 
-- **Email**: [angeloantona.contact@gmail.com](mailto:angeloantona.contact@gmail.com)
+- **E-mail**: [angeloantona.contact@gmail.com](mailto:angeloantona.contact@gmail.com)
 - **LinkedIn**: [Angelo Antona](https://www.linkedin.com/in/angeloantona/)
